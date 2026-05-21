@@ -3,7 +3,7 @@
 | | Today (shipped) | Tomorrow (planned) |
 |---|---|---|
 | Scheduling layer | **CocoonSet** — the `cocoonset.cocoonstack.io/v1` CRD, reconciled by `cocoon-operator`, running on `vk-cocoon` nodes | **MindSet** — the top-level cognitive layer; **not in the codebase**, it is the direction this doc defines |
-| Agent shape | `spec.agent.kind: desktop` (cloud desktop) / `autonomous` (self-driving agent, see ADR-0003) | A Mind Agent orchestrates multiple CocoonSets, converging on a Goal |
+| Agent shape | `spec.agent.kind: desktop` (cloud desktop) / `autonomous` (self-driving agent) | A Mind Agent orchestrates multiple CocoonSets, converging on a Goal |
 | Convergence verdict | Operator reconciles replica count / node selection | Verifier judging "closer to the end-state?" |
 
 ---
@@ -329,11 +329,10 @@ This design lands in two steps. **CocoonSet is the substrate already running**; 
 ### 4.1 CocoonSet
 
 - **CRD**: `cocoonset.cocoonstack.io/v1`, Kind `CocoonSet` (short name `cs`), reconciled by `cocoon-operator`, admission-validated by `cocoon-webhook`.
-- **The Agent-shape discriminator field**: `spec.agent.kind` (see ADR-0003 in the `cocoon-family` repo) —
-  - `kind: desktop` (default): the cloud-desktop workload consumed by `cocoon-clouddesktop` (human RDP / SSH desktops, replica clone-out);
+- **The Agent-shape discriminator field**: `spec.agent.kind` —
+  - `kind: desktop` (default): cloud-desktop workload — human RDP / SSH desktops, replica clone-out;
   - `kind: autonomous`: the self-driving Agent workload — an LLM self-iteration loop + sub-Pod workers, requiring a `goalRef` or an inline `goal`.
 - **Runtime model**: `vk-cocoon` is the virtual-kubelet provider; it registers each EBM bare-metal host as one K8s node. Pods derived by the Operator are scheduled onto those nodes, and the `cocoon` CLI brings up the MicroVMs.
-- **"Single Brain + Multi Workers" already has an embryo**: ADR-0003 already defines the brain / runtime split and `goalRef` content-addressing for the `autonomous` shape — which is precisely the L2 execution domain of MindSet.
 
 ### 4.2 MindSet (planned)
 
@@ -347,7 +346,7 @@ What MindSet adds above CocoonSet is the **cognitive layer**:
 | Rollback | Pod-level teardown | **Deterministic rollback based on the Session Log** — inversely undo physical side effects |
 | Memory | Session Log (per Pod) | A three-tier memory model — SSOT / WAL / Materialized View — forbidding cache usurpation |
 
-Suggested landing order: first **promote the Verifier to a first-class citizen** (an M4+ direction beyond the current `roadmap.md` M0–M3), then **multi-CocoonSet orchestration**, and finally **Mind Agent interaction modeling**.
+Landing order: first **promote the Verifier to a first-class citizen**, then **multi-CocoonSet orchestration**, and finally **Mind Agent interaction modeling**.
 
 ---
 

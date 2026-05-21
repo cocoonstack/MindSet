@@ -3,7 +3,7 @@
 | | 今天（已落地） | 明天（规划中） |
 |---|---|---|
 | 调度层 | **CocoonSet** — `cocoonset.cocoonstack.io/v1` CRD，已由 `cocoon-operator` 调谐、在 `vk-cocoon` 节点上运行 | **MindSet** — 顶层认知层，目前**不在代码里**，是本文定义的方向 |
-| Agent 形态 | `spec.agent.kind: desktop`（云桌面）/ `autonomous`（自驱 Agent，见 ADR-0003） | Mind Agent 编排多个 CocoonSet，按 Goal 收敛 |
+| Agent 形态 | `spec.agent.kind: desktop`（云桌面）/ `autonomous`（自驱 Agent） | Mind Agent 编排多个 CocoonSet，按 Goal 收敛 |
 | 收敛判定 | Operator 调谐副本数 / 节点选择 | Verifier 判定「是否更接近终态」 |
 
 ---
@@ -329,11 +329,10 @@ flowchart TB
 ### 4.1 CocoonSet
 
 - **CRD**：`cocoonset.cocoonstack.io/v1`，Kind `CocoonSet`（短名 `cs`），由 `cocoon-operator` 调谐，`cocoon-webhook` 准入校验。
-- **Agent 形态判别字段**：`spec.agent.kind`（见 `cocoon-family` 仓库的 ADR-0003）——
-  - `kind: desktop`（默认）：`cocoon-clouddesktop` 消费的云桌面工作负载（人类 RDP / SSH 桌面、副本克隆）；
+- **Agent 形态判别字段**：`spec.agent.kind` —
+  - `kind: desktop`（默认）：云桌面工作负载——人类 RDP / SSH 桌面、副本克隆；
   - `kind: autonomous`：自驱 Agent 工作负载——LLM 自迭代循环 + 子 Pod worker，要求 `goalRef` 或内联 `goal`。
 - **运行模型**：`vk-cocoon` 作为 virtual-kubelet provider，把每台 EBM 裸金属注册成一个 K8s node；Operator 派生的 Pod 调度到这些节点，由 `cocoon` CLI 拉起 MicroVM。
-- **「单脑多手」已有雏形**：ADR-0003 已经定义了 `autonomous` 形态的 brain / runtime 拆分与 `goalRef` 内容寻址——这正是 MindSet 的 L2 执行域。
 
 ### 4.2 MindSet（规划）
 
@@ -347,7 +346,7 @@ MindSet 要在 CocoonSet 之上补齐的，是**认知层**：
 | 回滚 | Pod 级 teardown | **基于 Session Log 的确定性回滚**——逆向撤销物理副作用 |
 | 记忆 | Session Log（按 Pod） | SSOT / WAL / Materialized View 三级记忆模型，禁止 cache 篡权 |
 
-落地次序建议：先把 **Verifier 抽成一等公民**（当前 `roadmap.md` M0–M3 之上的 M4+ 方向），再做 **多 CocoonSet 编排**，最后做 **Mind Agent 交互建模**。
+落地次序：先把 **Verifier 抽成一等公民**，再做 **多 CocoonSet 编排**，最后做 **Mind Agent 交互建模**。
 
 ---
 
